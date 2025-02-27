@@ -1,7 +1,7 @@
 import { AI_NAME, OWNER_NAME } from "@/configuration/identity";
 
 export const CHAT_HEADER: string = `ResuMe AI`;
-export const MESSAGE_PLACEHOLDER: string = `[MESSAGE PLACEHOLDER]`;
+export const MESSAGE_PLACEHOLDER: string = `Type Your Message`;
 export const FOOTER_MESSAGE: string = `Customized AI by Sarah Glenn`;
 export const CLEAR_BUTTON_TEXT: string = `Start New Chat`;
 export const PAGE_TITLE: string = `ResuMe AI`;
