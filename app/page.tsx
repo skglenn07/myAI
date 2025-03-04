@@ -48,13 +48,11 @@ return (
     <ChatHeader clearMessages={clearMessages} />
 
     {/* Job Matching Button */}
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center mt-4">
       <Link href="/job-matcher">
-        <a>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition">
-            Try Job Matcher
-          </button>
-        </a>
+        <button className="px-6 py-3 bg-green-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-green-700 transition">
+          Try Job Matcher
+        </button>
       </Link>
     </div>
 
