@@ -5,8 +5,6 @@ import ChatMessages from "@/components/chat/messages";
 import useApp from "@/hooks/use-app";
 import ChatHeader from "@/components/chat/header";
 import { useState } from "react";
-import Link from "next/link";
-
 
 export default function Chat() {
   const {
@@ -19,48 +17,27 @@ export default function Chat() {
     clearMessages,
   } = useApp();
 
-  // Job Matcher State
-  const [jobDescription, setJobDescription] = useState("");
-  const [resumeText, setResumeText] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const analyzeJobMatch = async () => {
-    if (!jobDescription || !resumeText) {
-      alert("Please enter both a job description and your resume text.");
-      return;
-    }
-
-    setLoading(true);
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: jobDescription, resumeText }),
-    });
-
-    const data = await response.json();
-    setFeedback(data.feedback);
-    setLoading(false);
-  };
-
-return (
-  <>
-    <ChatHeader clearMessages={clearMessages} />
-    
-    {/* Chat Interface */}
-    <div className="flex justify-center items-center h-screen">
-      <div className="flex flex-col max-w-screen-lg w-full h-full p-5">
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-200">
+      <ChatHeader clearMessages={clearMessages} />
+      <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg p-6 mt-6 flex flex-col gap-4">
+        <h1 className="text-2xl font-bold text-center text-gray-800">Welcome to Your AI Assistant</h1>
+        <p className="text-gray-600 text-center">
+          Get instant responses, refine your writing, and enhance your job applications with AI-powered assistance.
+        </p>
+      </div>
+      <div className="w-full max-w-3xl flex-1 overflow-y-auto mt-4 p-4 bg-white shadow-md rounded-lg">
         <ChatMessages messages={messages} indicatorState={indicatorState} />
       </div>
+      <div className="w-full max-w-3xl mt-4">
+        <ChatInput
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
-
-    <ChatInput
-      handleInputChange={handleInputChange}
-      handleSubmit={handleSubmit}
-      input={input}
-      isLoading={isLoading}
-    />
-  </>
-);
-
+  );
 }
+
