@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { EraserIcon } from "lucide-react";
+import { EraserIcon, BriefcaseIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { CHAT_HEADER, CLEAR_BUTTON_TEXT } from "@/configuration/ui";
@@ -21,8 +21,9 @@ export default function ChatHeader({
     <div className="z-10 flex justify-between items-center fixed top-0 w-full p-5 bg-white shadow-[0_10px_15px_-3px_rgba(255,255,255,1)]">
       <div className="flex-0">
         <Link href="/job-matcher">
-          <Button className="gap-2 shadow-sm" variant="outline" size="sm">
-            Try Job Matcher
+          <Button className="gap-2 shadow-sm bg-green-600 text-white hover:bg-green-700" size="sm">
+            <BriefcaseIcon className="w-4 h-4" />
+            <span>Try Job Matcher</span>
           </Button>
         </Link>
       </div>
@@ -44,4 +45,3 @@ export default function ChatHeader({
     </div>
   );
 }
-
