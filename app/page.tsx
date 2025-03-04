@@ -48,7 +48,7 @@ return (
     <ChatHeader clearMessages={clearMessages} />
     
     {/* Chat Interface */}
-    <div className="flex justify-center items-center h-screen bg-gradient-to-b from-gray-50 to-gray-200">
+    <div className="flex justify-center items-center h-screen bg-gradient-to-b from-blue-50 to-gray-100">
       <div className="flex flex-col max-w-screen-lg w-full h-full p-5">
         <ChatMessages messages={messages} indicatorState={indicatorState} />
       </div>
