@@ -50,9 +50,11 @@ return (
     {/* Job Matching Button */}
     <div className="flex justify-center mt-4">
       <Link href="/job-matcher">
-        <button className="p-2 bg-green-500 text-white rounded">
-          Try Job Matcher
-        </button>
+        <a>
+          <button className="p-2 bg-green-500 text-white rounded">
+            Try Job Matcher
+          </button>
+        </a>
       </Link>
     </div>
 
