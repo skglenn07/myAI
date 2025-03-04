@@ -65,3 +65,20 @@ export async function POST(req: Request) {
     return ResponseModule.respondToRandomMessage(chat, providers);
   }
 }
+
+// job description optimization functionality
+export async function POST(req: NextRequest) {
+  const { message, resumeText } = await req.json();
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are an expert in ATS resume matching. Analyze this job description against the provided resume." },
+      { role: "user", content: `Job Description:\n${message}\n\nResume:\n${resumeText}` }
+    ],
+  });
+
+  return NextResponse.json({ feedback: response.choices[0].message.content });
+}
