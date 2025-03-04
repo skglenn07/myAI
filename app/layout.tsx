@@ -20,7 +20,6 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: PAGE_TITLE,
   description: PAGE_DESCRIPTION,
-  icons: "/ResuMe_icon.ico",
 };
 
 export default function RootLayout({
