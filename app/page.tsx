@@ -5,6 +5,8 @@ import ChatMessages from "@/components/chat/messages";
 import useApp from "@/hooks/use-app";
 import ChatHeader from "@/components/chat/header";
 import { useState } from "react";
+import Link from "next/link";
+
 
 export default function Chat() {
   const {
