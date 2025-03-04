@@ -70,9 +70,6 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.0.0",
     "zod": "^3.23.8",
-
-    
-    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -83,6 +80,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+    "@types/pdf-parse": "^1.0.0"
   },
   "packageManager": "pnpm@9.12.0+sha256.a61b67ff6cc97af864564f4442556c22a04f2e5a7714fbee76a1011361d9b726"
 }
