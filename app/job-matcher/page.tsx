@@ -32,7 +32,7 @@ export default function JobMatcher() {
         <h1 className="text-3xl font-extrabold text-gray-800 mb-3">Job Description Matcher</h1>
         <p className="text-gray-600 mb-6">
           The Job Description Matcher helps you analyze how well your resume aligns with a given job description.
-          Simply enter the job posting details and your resume content to receive feedback on your compatibility.
+          Simply enter the job posting details and your resume content to receive feedback on your compatibility!
         </p>
 
         <div className="space-y-4">
@@ -63,6 +63,14 @@ export default function JobMatcher() {
             <p>{feedback}</p>
           </div>
         )}
+
+        <div className="mt-6">
+          <Link href="/">
+            <button className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow hover:bg-gray-700 transition">
+              Back to Main Chat
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );
