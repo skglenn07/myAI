@@ -21,9 +21,9 @@ export default function ChatHeader({
     <div className="z-10 flex justify-between items-center fixed top-0 w-full p-5 bg-white shadow-[0_10px_15px_-3px_rgba(255,255,255,1)]">
       <div className="flex-0">
         <Link href="/job-matcher">
-          <button className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition">
+          <Button className="gap-2 shadow-sm" variant="outline" size="sm">
             Try Job Matcher
-          </button>
+          </Button>
         </Link>
       </div>
       <div className="flex-1 flex justify-center items-center gap-4">
