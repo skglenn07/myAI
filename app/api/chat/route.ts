@@ -52,33 +52,56 @@ async function determineIntention(chat: Chat): Promise<Intention> {
   });
 }
 
+// export async function POST(req: Request) {
+//   const { chat } = await req.json();
+
+//   const intention: Intention = await determineIntention(chat);
+
+//   if (intention.type === "question") {
+//     return ResponseModule.respondToQuestion(chat, providers, pineconeIndex);
+//   } else if (intention.type === "hostile_message") {
+//     return ResponseModule.respondToHostileMessage(chat, providers);
+//   } else {
+//     return ResponseModule.respondToRandomMessage(chat, providers);
+//   }
+// }
+
 export async function POST(req: Request) {
-  const { chat } = await req.json();
-
-  const intention: Intention = await determineIntention(chat);
-
-  if (intention.type === "question") {
-    return ResponseModule.respondToQuestion(chat, providers, pineconeIndex);
-  } else if (intention.type === "hostile_message") {
-    return ResponseModule.respondToHostileMessage(chat, providers);
-  } else {
-    return ResponseModule.respondToRandomMessage(chat, providers);
-  }
-}
-
-// job description optimization functionality
-export async function POST(req: NextRequest) {
-  const { message, resumeText } = await req.json();
-
+  const { message, resumeText, chat } = await req.json();
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: "You are an expert in ATS resume matching. Analyze this job description against the provided resume." },
-      { role: "user", content: `Job Description:\n${message}\n\nResume:\n${resumeText}` }
-    ],
-  });
+  //  Job Matching Request (Check if both `message` and `resumeText` exist)
+  if (message && resumeText) {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are an expert in ATS resume matching. Analyze this job description against the provided resume and suggest optimizations." },
+        { role: "user", content: `Job Description:\n${message}\n\nResume:\n${resumeText}` },
+      ],
+    });
 
-  return NextResponse.json({ feedback: response.choices[0].message.content });
+    return new Response(JSON.stringify({ feedback: response.choices[0].message.content }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  //  Chat Message Handling
+  if (chat) {
+    const intention: Intention = await determineIntention(chat);
+
+    if (intention.type === "question") {
+      return ResponseModule.respondToQuestion(chat, providers, pineconeIndex);
+    } else if (intention.type === "hostile_message") {
+      return ResponseModule.respondToHostileMessage(chat, providers);
+    } else {
+      return ResponseModule.respondToRandomMessage(chat, providers);
+    }
+  }
+
+  // If no valid request type is found, return an error
+  return new Response(JSON.stringify({ error: "Invalid request payload" }), {
+    status: 400,
+    headers: { "Content-Type": "application/json" },
+  });
 }
+
