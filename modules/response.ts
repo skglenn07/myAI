@@ -45,6 +45,10 @@ import {
   RANDOM_RESPONSE_TEMPERATURE,
 } from "@/configuration/models";
 
+
+import { respondToResumeAnalysis } from '@/modules/resumeAnalysis';
+import { analyzeResumeAgainstJob, extractKeywords } from '@/modules/resumeAnalysis';
+
 /**
  * ResponseModule is responsible for collecting data and building a response
  */
