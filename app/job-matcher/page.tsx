@@ -6,7 +6,7 @@ export default function JobMatcher() {
   const [jobDescription, setJobDescription] = useState('');
   const [resumeText, setResumeText] = useState('');
   const [analysis, setAnalysis] = useState(null);
-  const [followUpQuestions, setFollowUpQuestions] = useState(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
