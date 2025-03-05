@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/input';
 
 export default function JobMatcher() {
   const [jobDescription, setJobDescription] = useState('');
@@ -31,14 +30,14 @@ export default function JobMatcher() {
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Job Matcher</h1>
       <label className="block mb-2">Job Description:</label>
-      <Textarea
+      <textarea
         value={jobDescription}
         onChange={(e) => setJobDescription(e.target.value)}
         className="w-full p-2 border rounded"
         rows={5}
       />
       <label className="block mt-4 mb-2">Your Resume:</label>
-      <Textarea
+      <textarea
         value={resumeText}
         onChange={(e) => setResumeText(e.target.value)}
         className="w-full p-2 border rounded"
