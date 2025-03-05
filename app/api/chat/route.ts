@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         model: "gpt-4",
         messages: [{ role: "user", content: userMessage }],
       });
-      aiResponse = chatCompletion.choices[0].message.content;
+      aiResponse = chatCompletion.choices[0].message.content ?? "I'm sorry, but I couldn't generate a response.";
     }
 
     return NextResponse.json({
