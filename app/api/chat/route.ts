@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { extractKeywords, analyzeResumeAgainstJob } from '@/modules/resumeAnalysis';
-import { generateFollowUpQuestions } from '@/modules/response';
 import { OpenAI } from "openai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { AIProviders, Chat, Intention } from "@/types";
@@ -25,68 +24,37 @@ if (!openaiApiKey) {
   throw new Error("OPENAI_API_KEY is not set");
 }
 
-// Initialize Pinecone
-const pineconeClient = new Pinecone({
-  apiKey: pineconeApiKey,
-});
-const pineconeIndex = pineconeClient.Index(PINECONE_INDEX_NAME);
-
-// Initialize Providers
-const openaiClient = new OpenAI({
-  apiKey: openaiApiKey,
-});
-const anthropicClient = new Anthropic({
-  apiKey: anthropicApiKey,
-});
-const fireworksClient = new OpenAI({
-  baseURL: "https://api.fireworks.ai/inference/v1",
-  apiKey: fireworksApiKey,
-});
-const providers: AIProviders = {
-  openai: openaiClient,
-  anthropic: anthropicClient,
-  fireworks: fireworksClient,
-};
-
-async function determineIntention(chat: Chat): Promise<Intention> {
-  return await IntentionModule.detectIntention({
-    chat: chat,
-    openai: providers.openai,
-  });
-}
+// Initialize OpenAI client
+const openai = new OpenAI({ apiKey: openaiApiKey });
 
 export async function POST(req: Request) {
   try {
-    const { jobDescription, resumeText, mode, message, chat } = await req.json();
-    
-    // If mode is 'chat', preserve main chat functionality
-    if (mode === 'chat') {
-      const intention: Intention = await determineIntention(chat);
-      if (intention.type === "question") {
-        return ResponseModule.respondToQuestion(chat, providers, pineconeIndex);
-      } else if (intention.type === "hostile_message") {
-        return ResponseModule.respondToHostileMessage(chat, providers);
-      } else {
-        return ResponseModule.respondToRandomMessage(chat, providers);
-      }
+    const { userMessage, resumeText, jobDescription, jobTitle } = await req.json();
+
+    let aiResponse = "";
+    let followUpQuestions: string[] = [];
+
+    if (resumeText && jobDescription) {
+      // Perform resume-job analysis
+      const analysis = analyzeResumeAgainstJob(resumeText, jobDescription, jobTitle);
+      aiResponse = `Here's how your resume matches the ${jobTitle} job description:\n- Matched Keywords: ${analysis.matchedKeywords.join(", ")}.\n- Missing Keywords: ${analysis.missingKeywords.join(", ")}.\n- Match Percentage: ${analysis.matchPercentage.toFixed(2)}%`;
+      followUpQuestions = analysis.followUpQuestions;
+    } else {
+      // Handle regular chat messages
+      const chatCompletion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: userMessage }],
+      });
+      aiResponse = chatCompletion.choices[0].message.content;
     }
-    
-    if (!jobDescription || !resumeText) {
-      return NextResponse.json({ error: 'Missing job description or resume text' }, { status: 400 });
-    }
-    
-    // Extract important keywords from the job description
-    const jobKeywords = extractKeywords(jobDescription);
-    
-    // Analyze how well the resume matches the job description
-    const analysis = analyzeResumeAgainstJob(resumeText, jobKeywords);
-    
-    // Generate follow-up questions for the user
-    const followUpQuestions = generateFollowUpQuestions(analysis);
-    
-    return NextResponse.json({ analysis, followUpQuestions });
+
+    return NextResponse.json({
+      aiResponse,
+      followUpQuestions,
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+    console.error("Error handling chat request:", error);
+    return NextResponse.json({ error: "An error occurred while processing your request." }, { status: 500 });
   }
 }
 
