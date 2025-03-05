@@ -46,25 +46,25 @@ import {
 } from "@/configuration/models";
 
 
-import { respondToResumeAnalysis } from '@/modules/resumeAnalysis';
-import { analyzeResumeAgainstJob, extractKeywords } from '@/modules/resumeAnalysis';
+// import { respondToResumeAnalysis } from '@/modules/resumeAnalysis';
+// import { analyzeResumeAgainstJob, extractKeywords } from '@/modules/resumeAnalysis';
 
 /**
  * ResponseModule is responsible for collecting data and building a response
  */
 export class ResponseModule {
   // resume analysis response:
-  static async respondToResumeAnalysisRequest(
-    jobDescription: string,
-    resumeText: string
-  ): Promise<Response> {
-    const { analysis, followUpQuestions } = await respondToResumeAnalysis(jobDescription, resumeText);
+  // static async respondToResumeAnalysisRequest(
+  //   jobDescription: string,
+  //   resumeText: string
+  // ): Promise<Response> {
+  //   const { analysis, followUpQuestions } = await respondToResumeAnalysis(jobDescription, resumeText);
 
-    return new Response(
-      JSON.stringify({ analysis, followUpQuestions }),
-      { headers: { "Content-Type": "application/json" } }
-    );
-  }
+  //   return new Response(
+  //     JSON.stringify({ analysis, followUpQuestions }),
+  //     { headers: { "Content-Type": "application/json" } }
+  //   );
+  // }
   static async respondToRandomMessage(
     chat: Chat,
     providers: AIProviders
@@ -246,22 +246,22 @@ export class ResponseModule {
   }
 }
 
-// follow up question generator:
-export function generateFollowUpQuestions(analysis: any): string[] {
-  const questions: string[] = [];
+// // follow up question generator:
+// export function generateFollowUpQuestions(analysis: any): string[] {
+//   const questions: string[] = [];
   
-  if (analysis.missingKeywords.length > 0) {
-    questions.push("Can you elaborate on any experience you have related to these missing skills: " + analysis.missingKeywords.join(", ") + "?");
-  }
+//   if (analysis.missingKeywords.length > 0) {
+//     questions.push("Can you elaborate on any experience you have related to these missing skills: " + analysis.missingKeywords.join(", ") + "?");
+//   }
   
-  if (analysis.matchPercentage < 50) {
-    questions.push("Would you be open to gaining more experience in these areas to improve your fit for this role?");
-  }
+//   if (analysis.matchPercentage < 50) {
+//     questions.push("Would you be open to gaining more experience in these areas to improve your fit for this role?");
+//   }
   
-  if (analysis.matchPercentage >= 50 && analysis.matchPercentage < 80) {
-    questions.push("Your resume aligns fairly well with this role. Are there any additional projects or coursework you've completed that relate to the job requirements?");
-  }
+//   if (analysis.matchPercentage >= 50 && analysis.matchPercentage < 80) {
+//     questions.push("Your resume aligns fairly well with this role. Are there any additional projects or coursework you've completed that relate to the job requirements?");
+//   }
   
-  return questions;
-}
+//   return questions;
+// }
 
