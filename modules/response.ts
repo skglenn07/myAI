@@ -99,8 +99,8 @@ export class ResponseModule {
       async start(controller) {
         queueIndicator({
           controller,
-          status: "Remaining calm and professional...",
-          icon: "shield",
+          status: "Coming up with an answer...",
+          icon: "thinking",
         });
         const systemPrompt = RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT();
         queueAssistantResponse({
