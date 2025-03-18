@@ -12,10 +12,10 @@ import {
   embedHypotheticalData,
   generateHypotheticalData,
   getSourcesFromChunks,
-  searchForChunksUsingEmbedding,
   getContextFromSources,
   getCitationsFromChunks,
-  buildPromptFromContext,
+  searchForChunksUsingEmbedding,
+  stripMessagesOfCitations,
 } from "@/utilities/chat";
 import {
   queueAssistantResponse,
@@ -26,7 +26,6 @@ import {
   HISTORY_CONTEXT_LENGTH,
   DEFAULT_RESPONSE_MESSAGE,
 } from "@/configuration/chat";
-import { stripMessagesOfCitations } from "@/utilities/chat";
 import {
   RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT,
   RESPOND_TO_QUESTION_BACKUP_SYSTEM_PROMPT,
@@ -45,33 +44,11 @@ import {
   RANDOM_RESPONSE_TEMPERATURE,
 } from "@/configuration/models";
 
-
-// import { respondToResumeAnalysis } from '@/modules/resumeAnalysis';
-// import { analyzeResumeAgainstJob, extractKeywords } from '@/modules/resumeAnalysis';
-
-/**
- * ResponseModule is responsible for collecting data and building a response
- */
 export class ResponseModule {
-  // resume analysis response:
-  // static async respondToResumeAnalysisRequest(
-  //   jobDescription: string,
-  //   resumeText: string
-  // ): Promise<Response> {
-  //   const { analysis, followUpQuestions } = await respondToResumeAnalysis(jobDescription, resumeText);
-
-  //   return new Response(
-  //     JSON.stringify({ analysis, followUpQuestions }),
-  //     { headers: { "Content-Type": "application/json" } }
-  //   );
-  // }
   static async respondToRandomMessage(
     chat: Chat,
     providers: AIProviders
   ): Promise<Response> {
-    /**
-     * Respond to the user when they send a RANDOM message
-     */
     const PROVIDER_NAME: ProviderName = RANDOM_RESPONSE_PROVIDER;
     const MODEL_NAME: string = RANDOM_RESPONSE_MODEL;
 
@@ -79,15 +56,21 @@ export class ResponseModule {
       async start(controller) {
         queueIndicator({
           controller,
-          status: "Coming up with an answer",
+          status: "Thinking about your writing goals...",
           icon: "thinking",
         });
-        const systemPrompt = RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT();
+
         const mostRecentMessages: CoreMessage[] = await convertToCoreMessages(
           stripMessagesOfCitations(chat.messages.slice(-HISTORY_CONTEXT_LENGTH))
         );
+        
+        // Determine if we have enough context about the user's goals
+        const userHasProvidedGoals = mostRecentMessages.some(msg => msg.role === "user" && msg.content.toLowerCase().includes("goal"));
 
-        const citations: Citation[] = [];
+        const systemPrompt = userHasProvidedGoals
+          ? RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT()
+          : "I notice you haven't mentioned your goals yet. What are you hoping to achieve with this piece? Let's start there.";
+
         queueAssistantResponse({
           controller,
           providers,
@@ -95,55 +78,12 @@ export class ResponseModule {
           messages: mostRecentMessages,
           model_name: MODEL_NAME,
           systemPrompt,
-          citations,
+          citations: [],
           error_message: DEFAULT_RESPONSE_MESSAGE,
           temperature: RANDOM_RESPONSE_TEMPERATURE,
         });
       },
     });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
-  }
-
-  static async respondToHostileMessage(
-    chat: Chat,
-    providers: AIProviders
-  ): Promise<Response> {
-    /**
-     * Respond to the user when they send a HOSTILE message
-     */
-    const PROVIDER_NAME: ProviderName = HOSTILE_RESPONSE_PROVIDER;
-    const MODEL_NAME: string = HOSTILE_RESPONSE_MODEL;
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        queueIndicator({
-          controller,
-          status: "Coming up with an answer",
-          icon: "thinking",
-        });
-        const systemPrompt = RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT();
-        const citations: Citation[] = [];
-        queueAssistantResponse({
-          controller,
-          providers,
-          providerName: PROVIDER_NAME,
-          messages: [],
-          model_name: MODEL_NAME,
-          systemPrompt,
-          citations,
-          error_message: DEFAULT_RESPONSE_MESSAGE,
-          temperature: HOSTILE_RESPONSE_TEMPERATURE,
-        });
-      },
-    });
-
     return new Response(stream, {
       headers: {
         "Content-Type": "text/event-stream",
@@ -158,9 +98,6 @@ export class ResponseModule {
     providers: AIProviders,
     index: any
   ): Promise<Response> {
-    /**
-     * Respond to the user when they send a QUESTION
-     */
     const PROVIDER_NAME: ProviderName = QUESTION_RESPONSE_PROVIDER;
     const MODEL_NAME: string = QUESTION_RESPONSE_MODEL;
 
@@ -168,7 +105,7 @@ export class ResponseModule {
       async start(controller) {
         queueIndicator({
           controller,
-          status: "Figuring out what your answer looks like",
+          status: "Helping you refine your thoughts...",
           icon: "thinking",
         });
         try {
@@ -180,7 +117,7 @@ export class ResponseModule {
             await embedHypotheticalData(hypotheticalData, providers.openai);
           queueIndicator({
             controller,
-            status: "Reading through documents",
+            status: "Exploring relevant ideas...",
             icon: "searching",
           });
           const chunks: Chunk[] = await searchForChunksUsingEmbedding(
@@ -190,16 +127,28 @@ export class ResponseModule {
           const sources: Source[] = await getSourcesFromChunks(chunks);
           queueIndicator({
             controller,
-            status: `Read over ${sources.length} documents`,
+            status: `Reviewing ${sources.length} related sources...`,
             icon: "documents",
           });
           const citations: Citation[] = await getCitationsFromChunks(chunks);
           const contextFromSources = await getContextFromSources(sources);
-          const systemPrompt =
-            RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources);
+
+          // Build a system prompt that encourages coaching and reader-response feedback
+          const coachingPrompt = `
+          Instead of providing direct edits, focus on guiding the user through their writing process.
+          If they haven't shared their goals yet, ask them about their purpose and audience.
+          Then, provide a structured response with:
+          - Perceived strengths in their writing
+          - Areas that could be improved (clarity, tone, structure, etc.)
+          - Thought-provoking questions to refine their ideas further
+          - Suggestions for next steps without directly rewriting their text
+          `;
+
+          const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources) + coachingPrompt;
+
           queueIndicator({
             controller,
-            status: "Coming up with an answer",
+            status: "Structuring feedback to support your goals...",
             icon: "thinking",
           });
           queueAssistantResponse({
@@ -235,7 +184,6 @@ export class ResponseModule {
         }
       },
     });
-
     return new Response(stream, {
       headers: {
         "Content-Type": "text/event-stream",
@@ -245,6 +193,256 @@ export class ResponseModule {
     });
   }
 }
+
+
+
+// import {
+//   Chat,
+//   Chunk,
+//   Source,
+//   CoreMessage,
+//   AIProviders,
+//   ProviderName,
+//   Citation,
+// } from "@/types";
+// import {
+//   convertToCoreMessages,
+//   embedHypotheticalData,
+//   generateHypotheticalData,
+//   getSourcesFromChunks,
+//   searchForChunksUsingEmbedding,
+//   getContextFromSources,
+//   getCitationsFromChunks,
+//   buildPromptFromContext,
+// } from "@/utilities/chat";
+// import {
+//   queueAssistantResponse,
+//   queueError,
+//   queueIndicator,
+// } from "@/actions/streaming";
+// import {
+//   HISTORY_CONTEXT_LENGTH,
+//   DEFAULT_RESPONSE_MESSAGE,
+// } from "@/configuration/chat";
+// import { stripMessagesOfCitations } from "@/utilities/chat";
+// import {
+//   RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT,
+//   RESPOND_TO_QUESTION_BACKUP_SYSTEM_PROMPT,
+//   RESPOND_TO_QUESTION_SYSTEM_PROMPT,
+//   RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT,
+// } from "@/configuration/prompts";
+// import {
+//   RANDOM_RESPONSE_PROVIDER,
+//   RANDOM_RESPONSE_MODEL,
+//   HOSTILE_RESPONSE_PROVIDER,
+//   HOSTILE_RESPONSE_MODEL,
+//   QUESTION_RESPONSE_PROVIDER,
+//   QUESTION_RESPONSE_MODEL,
+//   HOSTILE_RESPONSE_TEMPERATURE,
+//   QUESTION_RESPONSE_TEMPERATURE,
+//   RANDOM_RESPONSE_TEMPERATURE,
+// } from "@/configuration/models";
+
+
+// // import { respondToResumeAnalysis } from '@/modules/resumeAnalysis';
+// // import { analyzeResumeAgainstJob, extractKeywords } from '@/modules/resumeAnalysis';
+
+// /**
+//  * ResponseModule is responsible for collecting data and building a response
+//  */
+// export class ResponseModule {
+//   // resume analysis response:
+//   // static async respondToResumeAnalysisRequest(
+//   //   jobDescription: string,
+//   //   resumeText: string
+//   // ): Promise<Response> {
+//   //   const { analysis, followUpQuestions } = await respondToResumeAnalysis(jobDescription, resumeText);
+
+//   //   return new Response(
+//   //     JSON.stringify({ analysis, followUpQuestions }),
+//   //     { headers: { "Content-Type": "application/json" } }
+//   //   );
+//   // }
+//   static async respondToRandomMessage(
+//     chat: Chat,
+//     providers: AIProviders
+//   ): Promise<Response> {
+//     /**
+//      * Respond to the user when they send a RANDOM message
+//      */
+//     const PROVIDER_NAME: ProviderName = RANDOM_RESPONSE_PROVIDER;
+//     const MODEL_NAME: string = RANDOM_RESPONSE_MODEL;
+
+//     const stream = new ReadableStream({
+//       async start(controller) {
+//         queueIndicator({
+//           controller,
+//           status: "Coming up with an answer",
+//           icon: "thinking",
+//         });
+//         const systemPrompt = RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT();
+//         const mostRecentMessages: CoreMessage[] = await convertToCoreMessages(
+//           stripMessagesOfCitations(chat.messages.slice(-HISTORY_CONTEXT_LENGTH))
+//         );
+
+//         const citations: Citation[] = [];
+//         queueAssistantResponse({
+//           controller,
+//           providers,
+//           providerName: PROVIDER_NAME,
+//           messages: mostRecentMessages,
+//           model_name: MODEL_NAME,
+//           systemPrompt,
+//           citations,
+//           error_message: DEFAULT_RESPONSE_MESSAGE,
+//           temperature: RANDOM_RESPONSE_TEMPERATURE,
+//         });
+//       },
+//     });
+
+//     return new Response(stream, {
+//       headers: {
+//         "Content-Type": "text/event-stream",
+//         "Cache-Control": "no-cache",
+//         Connection: "keep-alive",
+//       },
+//     });
+//   }
+
+//   static async respondToHostileMessage(
+//     chat: Chat,
+//     providers: AIProviders
+//   ): Promise<Response> {
+//     /**
+//      * Respond to the user when they send a HOSTILE message
+//      */
+//     const PROVIDER_NAME: ProviderName = HOSTILE_RESPONSE_PROVIDER;
+//     const MODEL_NAME: string = HOSTILE_RESPONSE_MODEL;
+
+//     const stream = new ReadableStream({
+//       async start(controller) {
+//         queueIndicator({
+//           controller,
+//           status: "Coming up with an answer",
+//           icon: "thinking",
+//         });
+//         const systemPrompt = RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT();
+//         const citations: Citation[] = [];
+//         queueAssistantResponse({
+//           controller,
+//           providers,
+//           providerName: PROVIDER_NAME,
+//           messages: [],
+//           model_name: MODEL_NAME,
+//           systemPrompt,
+//           citations,
+//           error_message: DEFAULT_RESPONSE_MESSAGE,
+//           temperature: HOSTILE_RESPONSE_TEMPERATURE,
+//         });
+//       },
+//     });
+
+//     return new Response(stream, {
+//       headers: {
+//         "Content-Type": "text/event-stream",
+//         "Cache-Control": "no-cache",
+//         Connection: "keep-alive",
+//       },
+//     });
+//   }
+
+//   static async respondToQuestion(
+//     chat: Chat,
+//     providers: AIProviders,
+//     index: any
+//   ): Promise<Response> {
+//     /**
+//      * Respond to the user when they send a QUESTION
+//      */
+//     const PROVIDER_NAME: ProviderName = QUESTION_RESPONSE_PROVIDER;
+//     const MODEL_NAME: string = QUESTION_RESPONSE_MODEL;
+
+//     const stream = new ReadableStream({
+//       async start(controller) {
+//         queueIndicator({
+//           controller,
+//           status: "Figuring out what your answer looks like",
+//           icon: "thinking",
+//         });
+//         try {
+//           const hypotheticalData: string = await generateHypotheticalData(
+//             chat,
+//             providers.openai
+//           );
+//           const { embedding }: { embedding: number[] } =
+//             await embedHypotheticalData(hypotheticalData, providers.openai);
+//           queueIndicator({
+//             controller,
+//             status: "Reading through documents",
+//             icon: "searching",
+//           });
+//           const chunks: Chunk[] = await searchForChunksUsingEmbedding(
+//             embedding,
+//             index
+//           );
+//           const sources: Source[] = await getSourcesFromChunks(chunks);
+//           queueIndicator({
+//             controller,
+//             status: `Read over ${sources.length} documents`,
+//             icon: "documents",
+//           });
+//           const citations: Citation[] = await getCitationsFromChunks(chunks);
+//           const contextFromSources = await getContextFromSources(sources);
+//           const systemPrompt =
+//             RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources);
+//           queueIndicator({
+//             controller,
+//             status: "Coming up with an answer",
+//             icon: "thinking",
+//           });
+//           queueAssistantResponse({
+//             controller,
+//             providers,
+//             providerName: PROVIDER_NAME,
+//             messages: stripMessagesOfCitations(
+//               chat.messages.slice(-HISTORY_CONTEXT_LENGTH)
+//             ),
+//             model_name: MODEL_NAME,
+//             systemPrompt,
+//             citations,
+//             error_message: DEFAULT_RESPONSE_MESSAGE,
+//             temperature: QUESTION_RESPONSE_TEMPERATURE,
+//           });
+//         } catch (error: any) {
+//           console.error("Error in respondToQuestion:", error);
+//           queueError({
+//             controller,
+//             error_message: error.message ?? DEFAULT_RESPONSE_MESSAGE,
+//           });
+//           queueAssistantResponse({
+//             controller,
+//             providers,
+//             providerName: PROVIDER_NAME,
+//             messages: [],
+//             model_name: MODEL_NAME,
+//             systemPrompt: RESPOND_TO_QUESTION_BACKUP_SYSTEM_PROMPT(),
+//             citations: [],
+//             error_message: DEFAULT_RESPONSE_MESSAGE,
+//             temperature: QUESTION_RESPONSE_TEMPERATURE,
+//           });
+//         }
+//       },
+//     });
+
+//     return new Response(stream, {
+//       headers: {
+//         "Content-Type": "text/event-stream",
+//         "Cache-Control": "no-cache",
+//         Connection: "keep-alive",
+//       },
+//     });
+//   }
+// }
 
 // // follow up question generator:
 // export function generateFollowUpQuestions(analysis: any): string[] {
