@@ -64,12 +64,7 @@ export class ResponseModule {
           stripMessagesOfCitations(chat.messages.slice(-HISTORY_CONTEXT_LENGTH))
         );
         
-        // Determine if we have enough context about the user's goals
-        const userHasProvidedGoals = mostRecentMessages.some(msg => msg.role === "user" && msg.content.toLowerCase().includes("goal"));
-
-        const systemPrompt = userHasProvidedGoals
-          ? RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT()
-          : "I notice you haven't mentioned your goals yet. What are you hoping to achieve with this piece? Let's start there.";
+        const systemPrompt = RESPOND_TO_RANDOM_MESSAGE_SYSTEM_PROMPT();
 
         queueAssistantResponse({
           controller,
@@ -81,6 +76,43 @@ export class ResponseModule {
           citations: [],
           error_message: DEFAULT_RESPONSE_MESSAGE,
           temperature: RANDOM_RESPONSE_TEMPERATURE,
+        });
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
+
+  static async respondToHostileMessage(
+    chat: Chat,
+    providers: AIProviders
+  ): Promise<Response> {
+    const PROVIDER_NAME: ProviderName = HOSTILE_RESPONSE_PROVIDER;
+    const MODEL_NAME: string = HOSTILE_RESPONSE_MODEL;
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        queueIndicator({
+          controller,
+          status: "Remaining calm and professional...",
+          icon: "shield",
+        });
+        const systemPrompt = RESPOND_TO_HOSTILE_MESSAGE_SYSTEM_PROMPT();
+        queueAssistantResponse({
+          controller,
+          providers,
+          providerName: PROVIDER_NAME,
+          messages: [],
+          model_name: MODEL_NAME,
+          systemPrompt,
+          citations: [],
+          error_message: DEFAULT_RESPONSE_MESSAGE,
+          temperature: HOSTILE_RESPONSE_TEMPERATURE,
         });
       },
     });
@@ -133,18 +165,7 @@ export class ResponseModule {
           const citations: Citation[] = await getCitationsFromChunks(chunks);
           const contextFromSources = await getContextFromSources(sources);
 
-          // Build a system prompt that encourages coaching and reader-response feedback
-          const coachingPrompt = `
-          Instead of providing direct edits, focus on guiding the user through their writing process.
-          If they haven't shared their goals yet, ask them about their purpose and audience.
-          Then, provide a structured response with:
-          - Perceived strengths in their writing
-          - Areas that could be improved (clarity, tone, structure, etc.)
-          - Thought-provoking questions to refine their ideas further
-          - Suggestions for next steps without directly rewriting their text
-          `;
-
-          const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources) + coachingPrompt;
+          const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources);
 
           queueIndicator({
             controller,
