@@ -166,12 +166,17 @@ static async respondToQuestion(
           const contextFromSources = await getContextFromSources(sources);
 
           const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources) + `
-          Instead of rewriting the text, provide detailed feedback.
+          Based on the student's stated focus, tailor the response to address their concerns.
           - Identify strengths in the draft.
-          - Highlight specific areas that could be improved.
+          - Highlight specific areas that could be improved, using direct excerpts from the user's text.
           - Offer guiding questions that encourage deeper thinking.
-          - Suggest structural or content adjustments without rewriting the text.
-          - Ensure feedback references actual excerpts from the user's draft to make it more actionable, when relevant.
+          - Suggest structural or content adjustments without rewriting the entire text - you can suggest rewordings of a few sentences or changes like that.
+          - Ensure feedback references actual excerpts from the user's draft to make it more actionable, when appropriate.
+
+          After providing feedback, ask:
+          - How do they feel about the feedback?
+          - Would they like to focus on a specific aspect further?
+          - Is there anything they'd like to discuss or clarify before revising?
           `;
 
           queueIndicator({
