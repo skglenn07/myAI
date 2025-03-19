@@ -171,6 +171,7 @@ static async respondToQuestion(
           - Highlight specific areas that could be improved.
           - Offer guiding questions that encourage deeper thinking.
           - Suggest structural or content adjustments without rewriting the text.
+          - Ensure feedback references actual excerpts from the user's draft to make it more actionable, when relevant.
           `;
 
           queueIndicator({
