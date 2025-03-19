@@ -168,10 +168,11 @@ static async respondToQuestion(
           const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources) + `
           Based on the student's stated focus, tailor the response to address their concerns.
           - Identify strengths in the draft.
-          - Highlight specific areas that could be improved, using direct excerpts from the user's text.
+          - Highlight specific areas that could be improved, using direct excerpts from the user's text and **sourced materials when available**.
           - Offer guiding questions that encourage deeper thinking.
-          - Suggest structural or content adjustments without rewriting the entire text - you can suggest rewordings of a few sentences or changes like that.
-          - Ensure feedback references actual excerpts from the user's draft to make it more actionable, when appropriate.
+          - Suggest structural or content adjustments with a preference for **source-backed recommendations** while allowing general insights when needed.
+          - Do not rewrite the entire text, but you may suggest rewordings of small pieces or reorganization changes if relevant. 
+          - Ensure feedback references actual excerpts from the user's draft or cited sources to make it more actionable, when appropriate.
 
           After providing feedback, ask:
           - How do they feel about the feedback?
@@ -181,7 +182,7 @@ static async respondToQuestion(
 
           queueIndicator({
             controller,
-            status: "Providing specific feedback on your draft...",
+            status: "Providing specific feedback...",
             icon: "thinking",
           });
           queueAssistantResponse({
