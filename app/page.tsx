@@ -48,15 +48,15 @@ export default function Chat() {
       <ChatHeader clearMessages={clearMessages} />
 
       {/* Chat Container */}
-      <div className="flex flex-col h-screen bg-gradient-to-b from-blue-50 to-gray-100">
-
+      <div className="flex flex-col h-screen bg-gradient-to-b from-blue-50 to-gray-100 items-center">
+        
         {/* Chat Messages Scrollable Area */}
-        <div className="flex-grow overflow-y-auto p-5 max-w-screen-lg w-full mx-auto">
+        <div className="flex-grow overflow-y-auto p-5 w-full max-w-screen-lg">
           <ChatMessages messages={messages} indicatorState={indicatorState} />
         </div>
 
         {/* Chat Input Bar */}
-        <div className="sticky bottom-0 bg-white shadow-md p-4 w-full max-w-screen-lg mx-auto">
+        <div className="w-full max-w-screen-lg px-4 pb-4">
           <ChatInput
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
