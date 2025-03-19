@@ -125,7 +125,7 @@ export class ResponseModule {
     });
   }
 
-  static async respondToQuestion(
+static async respondToQuestion(
     chat: Chat,
     providers: AIProviders,
     index: any
@@ -165,11 +165,17 @@ export class ResponseModule {
           const citations: Citation[] = await getCitationsFromChunks(chunks);
           const contextFromSources = await getContextFromSources(sources);
 
-          const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources);
+          const systemPrompt = RESPOND_TO_QUESTION_SYSTEM_PROMPT(contextFromSources) + `
+          Instead of rewriting the text, provide detailed feedback.
+          - Identify strengths in the draft.
+          - Highlight specific areas that could be improved.
+          - Offer guiding questions that encourage deeper thinking.
+          - Suggest structural or content adjustments without rewriting the text.
+          `;
 
           queueIndicator({
             controller,
-            status: "Structuring feedback to support your goals...",
+            status: "Providing specific feedback on your draft...",
             icon: "thinking",
           });
           queueAssistantResponse({
