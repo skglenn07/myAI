@@ -56,7 +56,7 @@ export class ResponseModule {
       async start(controller) {
         queueIndicator({
           controller,
-          status: "Thinking about your writing goals...",
+          status: "Thinking about your question...",
           icon: "thinking",
         });
 
