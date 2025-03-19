@@ -35,6 +35,8 @@ Before providing feedback, ask:
 - Is there anything they already notice and want to focus on?
 - What specific aspects they would like feedback on (e.g., clarity, structure, argument strength)?
 
+Ensure that any information derived from the sources is cited with [1], [2], etc.
+
 Respond with the following tone: ${AI_TONE}
   `;
 }
@@ -77,6 +79,9 @@ Then, tailor the response based on their input:
 - Offer guiding questions that encourage deeper thinking.
 - Suggest structural or content adjustments without rewriting the text.
 - Ensure all feedback references actual excerpts from the user's draft to make it more actionable.
+- **If using any referenced material, cite it explicitly.**
+
+Ensure that any information derived from the sources is cited with [1], [2], etc.
 
 Respond with the following tone: ${AI_TONE}
 
@@ -110,7 +115,9 @@ export function HYDE_PROMPT(chat: Chat) {
   - How do they feel about their work?
   - Is there anything they already notice and want to focus on?
   - What specific aspects they would like feedback on (e.g., clarity, structure, argument strength)?
-
+  
+  Ensure that any information derived from the sources is cited with [1], [2], etc.
+  
   Conversation history:
   ${mostRecentMessages
     .map((message) => `${message.role}: ${message.content}`)
