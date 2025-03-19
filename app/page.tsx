@@ -43,24 +43,49 @@ export default function Chat() {
     setLoading(false);
   };
 
-return (
-  <>
-    <ChatHeader clearMessages={clearMessages} />
-    
-    {/* Chat Interface */}
-    <div className="flex justify-center items-center h-screen bg-gradient-to-b from-blue-50 to-gray-100">
-      <div className="flex flex-col max-w-screen-lg w-full h-full p-5">
-        <ChatMessages messages={messages} indicatorState={indicatorState} />
-      </div>
-    </div>
+  return (
+    <>
+      <ChatHeader clearMessages={clearMessages} />
 
-    <ChatInput
-      handleInputChange={handleInputChange}
-      handleSubmit={handleSubmit}
-      input={input}
-      isLoading={isLoading}
-    />
-  </>
-);
+      {/* Chat Container */}
+      <div className="flex flex-col h-screen bg-gradient-to-b from-blue-50 to-gray-100">
+
+        {/* Chat Messages Scrollable Area */}
+        <div className="flex-grow overflow-y-auto p-5 max-w-screen-lg w-full mx-auto">
+          <ChatMessages messages={messages} indicatorState={indicatorState} />
+        </div>
+
+        {/* Chat Input Bar */}
+        <div className="sticky bottom-0 bg-white shadow-md p-4 w-full max-w-screen-lg mx-auto">
+          <ChatInput
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            input={input}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+    </>
+  );
+
+// return (
+//   <>
+//     <ChatHeader clearMessages={clearMessages} />
+    
+//     {/* Chat Interface */}
+//     <div className="flex justify-center items-center h-screen bg-gradient-to-b from-blue-50 to-gray-100">
+//       <div className="flex flex-col max-w-screen-lg w-full h-full p-5">
+//         <ChatMessages messages={messages} indicatorState={indicatorState} />
+//       </div>
+//     </div>
+
+//     <ChatInput
+//       handleInputChange={handleInputChange}
+//       handleSubmit={handleSubmit}
+//       input={input}
+//       isLoading={isLoading}
+//     />
+//   </>
+// );
 
 }
