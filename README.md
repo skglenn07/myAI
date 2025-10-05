@@ -1,4 +1,4 @@
-# [link text](https://my-ai-alpha-nine.vercel.app/ "ResuMe AI")
+# [ResuMe AI](https://my-ai-alpha-nine.vercel.app/)
 
 ResuMe AI is an AI-powered writing coach designed to help college students improve their resumes, cover letters, and application essays. Unlike traditional editing tools, ResuMe AI provides a coaching experience: it asks questions about the student’s goals, gives reader-response feedback, and guides writers toward stronger revisions.
 
